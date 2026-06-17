@@ -1,9 +1,13 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven-3.9'
+    }
+
     environment {
-        IMAGE_NAME = "devops-cicd-project"
-        DOCKER_USER = "YOUR_DOCKERHUB_USERNAME"
+        APP_NAME = "devops-cicd-project"
+        IMAGE_NAME = "devops-cicd-project:v1"
     }
 
     stages {
@@ -15,28 +19,40 @@ pipeline {
             }
         }
 
+        stage('Build with Maven') {
+            steps {
+                sh 'mvn clean package -DskipTests'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t $IMAGE_NAME:v1 ."
+                sh 'docker build -t devops-cicd-project:v1 .'
             }
         }
 
         stage('Run Container (Test)') {
             steps {
                 sh '''
-                docker rm -f app || true
-                docker run -d -p 8080:8080 --name app devops-cicd-project:v1
+                    docker rm -f app || true
+                    docker run -d -p 8080:8080 --name app devops-cicd-project:v1
                 '''
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
                     sh '''
-                    echo $PASS | docker login -u $USER --password-stdin
-                    docker tag devops-cicd-project:v1 $USER/devops-cicd-project:v1
-                    docker push $USER/devops-cicd-project:v1
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
+                        docker tag devops-cicd-project:v1 $DOCKER_USER/devops-cicd-project:v1
+
+                        docker push $DOCKER_USER/devops-cicd-project:v1
                     '''
                 }
             }
@@ -45,7 +61,11 @@ pipeline {
 
     post {
         success {
-            echo "🚀 Full CI/CD Pipeline Success"
+            echo "Pipeline Success - CI/CD Completed"
+        }
+
+        failure {
+            echo "Pipeline Failed - Check Logs"
         }
     }
 }
