@@ -5,7 +5,9 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                deleteDir()
+                git branch: 'main',
+                url: 'https://github.com/Onkar11092000/devops-cicd-project.git'
             }
         }
 
@@ -24,10 +26,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline Successful'
+            echo "Pipeline Success 🚀"
         }
         failure {
-            echo 'Pipeline Failed'
+            echo "Pipeline Failed ❌"
         }
     }
 }
