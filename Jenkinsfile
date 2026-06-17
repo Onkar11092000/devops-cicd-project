@@ -8,6 +8,7 @@ pipeline {
     environment {
         APP_NAME = "devops-cicd-project"
         IMAGE_NAME = "devops-cicd-project:v1"
+        DOCKER_USER = "onkarborhade"
     }
 
     stages {
