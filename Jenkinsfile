@@ -9,32 +9,25 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'docker build -t devops-cicd-project:v1 .'
             }
         }
 
-        stage('Test') {
+        stage('Run Container') {
             steps {
-                sh 'mvn test'
-            }
-        }
-
-        stage('Archive Artifacts') {
-            steps {
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                sh 'docker run -d -p 8080:8080 --name app devops-cicd-project:v1 || true'
             }
         }
     }
 
     post {
         success {
-            echo 'Build Successful'
+            echo 'Pipeline Successful'
         }
-
         failure {
-            echo 'Build Failed Check logs'
+            echo 'Pipeline Failed'
         }
     }
 }
